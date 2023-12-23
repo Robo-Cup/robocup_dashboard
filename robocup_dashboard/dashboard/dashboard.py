@@ -3,6 +3,7 @@ import pygame
 
 from robocup_dashboard.dashboard.exceptions import DashboardException
 from robocup_dashboard.dashboard.key_value_list import KeyValueList
+from robocup_dashboard.dashboard.key_value_grid import KeyValueGrid
 
 WIDTH = 1000
 HEIGHT = 600
@@ -19,6 +20,7 @@ class Dashboard:
         self.font = pygame.font.SysFont("Arial", 20)
 
         self.key_value_list = KeyValueList(self.screen, (111, 45, 168), KEY_VALUE_LIST_WIDTH, HEIGHT)
+        self.key_value_grid = KeyValueGrid(self.screen, KEY_VALUE_LIST_WIDTH, WIDTH-KEY_VALUE_LIST_WIDTH, HEIGHT)
 
         pygame.display.set_caption("Robocup Dashboard")
         
@@ -44,8 +46,12 @@ class Dashboard:
             self.key_value_list_selected = x
 
     def update_value(self, i: int, value: float) -> None:
+        # check if values list is long enough
+        if len(self.values) <= i:
+            self.values += [0.0] * (i - len(self.values) + 1)
         self.values[i] = value
         self.key_value_list.update_value(i, value)
+        self.key_value_grid.update_value(i, value)
 
     def run(self) -> None:
         # Check events
@@ -62,6 +68,9 @@ class Dashboard:
                         # print("KEY VALUE LIST CLICKED")
                         self.set_key_value_list_selected(self.key_value_list.get_key_index_clicked(pos[1]))
                         self.editing_value = True
+                    else:
+                        # print("KEY VALUE GRID CLICKED")
+                        self.key_value_grid.handle_grid_item_clicked(pos[0], pos[1])
                 elif mouse_button[2]:
                     print("Right click")
                     self.key_value_list_selected = -1
@@ -107,10 +116,11 @@ class Dashboard:
 
             
         self.key_value_list.draw(self.key_value_list_selected)
+        self.key_value_grid.draw()
 
         # TODO: Replace black box with grid area
         # draw black rectangle over hte rest of the screen
-        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(KEY_VALUE_LIST_WIDTH, 0, WIDTH - KEY_VALUE_LIST_WIDTH, HEIGHT))
+        # pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(KEY_VALUE_LIST_WIDTH, 0, WIDTH - KEY_VALUE_LIST_WIDTH, HEIGHT))
 
         # TODO: Make this a class
         # Draw current text
@@ -133,3 +143,9 @@ class Dashboard:
             # Set value of any values that don't exist to 0
             self.values += [0] * (len(keys) - len(self.values))
         self.key_value_list.set_keys(keys)
+        self.key_value_grid.set_keys(keys)
+    
+    def set_values(self, keys: list[int], values: list[float]) -> None:
+        for index, key_index in enumerate(keys):
+            # print(f"key_index: {key_index}, value: {values[index]}")
+            self.update_value(key_index, values[index])

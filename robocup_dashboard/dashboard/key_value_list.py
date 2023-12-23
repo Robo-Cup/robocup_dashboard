@@ -52,6 +52,9 @@ class KeyValueList:
             self.values += ["NULL"] * (len(keys) - len(self.values))
 
     def update_value(self, index: int, value: any) -> None:
+        # Check if values list is long enough
+        if len(self.values) <= index:
+            self.values += ["NULL"] * (index - len(self.values) + 1)
         self.values[index] = value
     
     def get_key_index_clicked(self, y: int) -> int:
